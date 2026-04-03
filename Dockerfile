@@ -2,13 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Sucht jede .csproj Datei, egal wie sie genau heißt
-COPY *.csproj ./
-RUN dotnet restore
+# Erst nur Projektdateien kopieren (besseres Layer-Caching)
+COPY DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj DevopsFallstudie/DevopsFallstudie/
+COPY DevopsFallstudie/DevopsFallstudie.Client/DevopsFallstudie.Client.csproj DevopsFallstudie/DevopsFallstudie.Client/
+RUN dotnet restore DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj
 
 # Kopiert den Rest und veröffentlicht die App
 COPY . .
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Run
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
