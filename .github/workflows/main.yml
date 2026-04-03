@@ -56,6 +56,17 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      # NEU: Wir kopieren die Datei sicher auf den Server
+      - name: Kopiere docker-compose.yml auf den Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/root/devopsfallstudie"
+
+      # ANGEPASST: Nur noch ausführen, nicht mehr generieren
       - name: Deploy auf Hetzner via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -63,18 +74,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Login beim Server
+            cd /root/devopsfallstudie
+            
+            # Bei GitHub Registry einloggen
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u niklasheckmann --password-stdin
             
-            # Das neue Image ziehen
-            docker pull ghcr.io/niklasheckmann/devopsfallstudie:latest
-            
-            # Alten Container weg, neuer Name 'devopsfallstudie-app' hin
-            docker stop devopsfallstudie-app || true
-            docker rm devopsfallstudie-app || true
-            
-            docker run -d \
-              --name devopsfallstudie-app \
-              -p 80:8080 \
-              --restart always \
-              ghcr.io/niklasheckmann/devopsfallstudie:latest
+            # Compose die Arbeit machen lassen
+            docker compose pull
+            docker compose up -d

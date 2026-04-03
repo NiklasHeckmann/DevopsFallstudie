@@ -1,0 +1,7 @@
+services:
+  web:
+    image: ghcr.io/niklasheckmann/devopsfallstudie:latest
+    container_name: devopsfallstudie-app
+    ports:
+      - "80:8080"
+    restart: always
