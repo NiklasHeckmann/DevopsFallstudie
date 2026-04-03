@@ -33,4 +33,4 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Docker Image testweise bauen
-      run: docker build . --file Dockerfile --tag DevopsFallstudie:latest
+      run: docker build . --file Dockerfile --tag devopsfallstudie:latest
