@@ -1,0 +1,36 @@
+name: CI Pipeline (Build & Test)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Code auschecken
+      uses: actions/checkout@v3
+
+    - name: .NET Umgebung einrichten
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Abhängigkeiten wiederherstellen
+      run: dotnet restore
+
+    - name: Code kompilieren (Build)
+      run: dotnet build --no-restore
+
+    - name: Automatisierte Tests ausführen
+      run: dotnet test --no-build --verbosity normal
+
+  docker-build:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Code auschecken
+      uses: actions/checkout@v3
+
+    - name: Docker Image testweise bauen
+      run: docker build . --file Dockerfile --tag DevopsFallstudie:latest
