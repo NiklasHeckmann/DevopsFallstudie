@@ -1,14 +1,20 @@
-# Stage 1: Build (Das schwere Werkzeug)
+# Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["DevopsFallstudie.csproj", "./"]
-RUN dotnet restore "./DevopsFallstudie.csproj"
-COPY . .
-RUN dotnet publish "DevopsFallstudie.csproj" -c Release -o /app/publish
 
-# Stage 2: Run (Das leichte, sichere Image für Hetzner)
+# Sucht jede .csproj Datei, egal wie sie genau heißt
+COPY *.csproj ./
+RUN dotnet restore
+
+# Kopiert den Rest und veröffentlicht die App
+COPY . .
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+# Stage 2: Run
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-EXPOSE 8080
 COPY --from=build /app/publish .
+
+# Der kritischste Punkt: Der Name der DLL muss exakt stimmen
+# Falls es knallt, schau nach, wie die Datei im Ordner /bin/Release/net10.0/ heißt
 ENTRYPOINT ["dotnet", "DevopsFallstudie.dll"]
