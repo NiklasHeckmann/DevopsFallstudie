@@ -56,6 +56,8 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
       # NEU: Wir kopieren die Datei sicher auf den Server
       - name: Kopiere docker-compose.yml auf den Server
         uses: appleboy/scp-action@master
