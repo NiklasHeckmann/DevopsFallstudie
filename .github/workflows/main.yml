@@ -27,6 +27,12 @@ jobs:
       - name: Code kompilieren
         run: dotnet build DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj --no-restore
 
+      - name: Automatisierte Tests ausführen
+        run: dotnet test DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj --no-build --verbosity normal
+
+      - name: Code-Qualität prüfen (Static Code Analysis)
+        run: dotnet format DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj --verify-no-changes --severity warn
+
   # Job 2: Docker Image erstellen und hochladen
   build-and-push:
     needs: build-and-test
