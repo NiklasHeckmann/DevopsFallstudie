@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/Projektmappenelemente/">
+    <File Path=".github/workflows/main.yml" />
+    <File Path="docker-compose.yml" />
+    <File Path="Dockerfile" />
+  </Folder>
   <Project Path="DevopsFallstudie.Tests/DevopsFallstudie.Tests.csproj" />
   <Project Path="DevopsFallstudie/DevopsFallstudie.Client/DevopsFallstudie.Client.csproj" />
   <Project Path="DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj" />
