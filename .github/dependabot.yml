@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # 1. Überwacht deine GitHub Actions (z.B. checkout@v4, setup-dotnet@v4)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # 2. Überwacht deine C#/.NET Abhängigkeiten (NuGet-Pakete)
+  - package-ecosystem: "nuget"
+    directory: "/" # Wenn deine .sln/.csproj in einem Unterordner liegt, z.B. "/DevopsFallstudie" eintragen!
+    schedule:
+      interval: "weekly"
+
+  # 3. Überwacht dein Dockerfile (Prüft, ob es ein neueres Basis-Image von Microsoft gibt)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
