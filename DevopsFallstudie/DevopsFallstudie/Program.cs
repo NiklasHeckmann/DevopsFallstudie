@@ -1,10 +1,10 @@
 using DevopsFallstudie.Components;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder =
+WebApplication.CreateBuilder(args);
+    builder.Services.AddRazorComponents();
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveWebAssemblyComponents();
+
 
 var app = builder.Build();
 
