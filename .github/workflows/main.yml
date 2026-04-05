@@ -105,9 +105,7 @@ jobs:
             docker compose pull
             docker compose up -d --force-recreate
 
-  # ==========================================
-  # Job 4: DEPLOY AUF LIVE-SERVER (PRODUCTION)
-  # ==========================================
+ 
   deploy-production:
     if: github.event_name == 'push'
     needs: deploy-staging
@@ -129,9 +127,9 @@ jobs:
       - name: Deploy auf Production via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.PRODUCTION_SERVER_IP }} # <--- Variablen hier repariert!
+          host: ${{ secrets.PRODUCTION_SERVER_IP }} 
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}    # <--- Variablen hier repariert!
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}    
           script: |
             cd /root/devopsfallstudie
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
