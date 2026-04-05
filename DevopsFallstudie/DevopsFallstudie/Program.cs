@@ -2,7 +2,7 @@ using DevopsFallstudie.Components;
 
 var builder =
 WebApplication.CreateBuilder(args);
-builder.Services.AddRazorComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 
 
