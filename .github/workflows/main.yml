@@ -108,9 +108,9 @@ jobs:
       - name: Kopiere docker-compose.yml auf Production-Server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.PRODUCTION_SERVER_IP }} # <--- WICHTIG: Die IP vom alten, echten Server!
+          host: ${{ secrets.SERVER_IP }} # <--- WICHTIG: Die IP vom alten, echten Server!
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}    # <--- WICHTIG: Der Key vom alten Server!
+          key: ${{ secrets.SSH_PRIVATE_KEY }}    # <--- WICHTIG: Der Key vom alten Server!
           source: "docker-compose.yml"
           target: "/root/devopsfallstudie"
 
