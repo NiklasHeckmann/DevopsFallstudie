@@ -3,7 +3,12 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
-
+  pull_request:
+    branches: [ "main" ]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 permissions:
   packages: write
   contents: read
@@ -59,9 +64,10 @@ jobs:
 
   # Job 3: Auf Hetzner ausrollen
   deploy-staging:
+    if: github.event_name == 'push'
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: staging  # Keine Approval-Regel! Läuft sofort durch.
+    environment: staging
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -91,7 +97,8 @@ jobs:
   # 2. DEPLOY AUF LIVE-SERVER (PRODUCTION)
   # ==========================================
   deploy-production:
-    needs: deploy-staging # <--- WICHTIG: Startet erst, wenn Staging durch ist!
+    if: github.event_name == 'push'
+    needs: deploy-staging
     runs-on: ubuntu-latest
     environment: production # <--- WICHTIG: Hier springt dein Approval-Türsteher an!
     steps:
