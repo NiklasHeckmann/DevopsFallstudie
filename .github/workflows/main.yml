@@ -58,36 +58,63 @@ jobs:
           tags: ghcr.io/niklasheckmann/devopsfallstudie:latest
 
   # Job 3: Auf Hetzner ausrollen
-  deploy:
+  deploy-staging:
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: production
+    environment: staging  # Keine Approval-Regel! Läuft sofort durch.
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
-      # NEU: Wir kopieren die Datei sicher auf den Server
-      - name: Kopiere docker-compose.yml auf den Server
+        uses: actions/checkout@v4
+        
+      - name: Kopiere docker-compose.yml auf Staging-Server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.STAGING_SERVER_IP }} # <--- WICHTIG: Die IP vom neuen Server!
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.STAGING_SSH_KEY }}    # <--- WICHTIG: Der Key vom neuen Server!
           source: "docker-compose.yml"
           target: "/root/devopsfallstudie"
 
-      # ANGEPASST: Nur noch ausführen, nicht mehr generieren
-      - name: Deploy auf Hetzner via SSH
+      - name: Deploy auf Staging via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.STAGING_SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
             cd /root/devopsfallstudie
-            
-            # Bei GitHub Registry einloggen
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u niklasheckmann --password-stdin
-            
-            # Compose die Arbeit machen lassen
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull
-            docker compose up -d
+            docker compose up -d --force-recreate
+
+  # ==========================================
+  # 2. DEPLOY AUF LIVE-SERVER (PRODUCTION)
+  # ==========================================
+  deploy-production:
+    needs: deploy-staging # <--- WICHTIG: Startet erst, wenn Staging durch ist!
+    runs-on: ubuntu-latest
+    environment: production # <--- WICHTIG: Hier springt dein Approval-Türsteher an!
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Kopiere docker-compose.yml auf Production-Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_SERVER_IP }} # <--- WICHTIG: Die IP vom alten, echten Server!
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}    # <--- WICHTIG: Der Key vom alten Server!
+          source: "docker-compose.yml"
+          target: "/root/devopsfallstudie"
+
+      - name: Deploy auf Production via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /root/devopsfallstudie
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull
+            docker compose up -d --force-recreate
