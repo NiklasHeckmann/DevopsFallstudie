@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: .NET Umgebung einrichten
         uses: actions/setup-dotnet@v4
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Login bei GitHub Container Registry
         uses: docker/login-action@v4
@@ -64,7 +64,7 @@ jobs:
     environment: production
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       # NEU: Wir kopieren die Datei sicher auf den Server
       - name: Kopiere docker-compose.yml auf den Server
         uses: appleboy/scp-action@master
