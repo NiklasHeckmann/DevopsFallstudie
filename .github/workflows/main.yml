@@ -5,16 +5,19 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-  
+
 permissions:
   packages: write
   contents: read
 
 jobs:
+  # ==========================================
   # Job 1: Erst testen und bauen (Qualitätssicherung)
+  # ==========================================
   build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -38,13 +41,19 @@ jobs:
       - name: Code-Qualität prüfen (Static Code Analysis)
         run: dotnet format DevopsFallstudie/DevopsFallstudie/DevopsFallstudie.csproj --verify-no-changes --severity warn
 
+  # ==========================================
   # Job 2: Docker Image erstellen und hochladen
+  # ==========================================
   build-and-push:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
+
+      # WICHTIG: Das hier repariert den Cache-Fehler!
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login bei GitHub Container Registry
         uses: docker/login-action@v4
@@ -59,12 +68,13 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # WICHTIG: Hier alles kleingeschrieben, sonst gibt es den "Denied" Fehler!
           tags: ghcr.io/niklasheckmann/devopsfallstudie:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Job 3: Auf Hetzner ausrollen
+  # ==========================================
+  # Job 3: Auf Hetzner ausrollen (Staging)
+  # ==========================================
   deploy-staging:
     if: github.event_name == 'push'
     needs: build-and-push
@@ -77,9 +87,9 @@ jobs:
       - name: Kopiere docker-compose.yml auf Staging-Server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.STAGING_SERVER_IP }} # <--- WICHTIG: Die IP vom neuen Server!
+          host: ${{ secrets.STAGING_SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}    # <--- WICHTIG: Der Key vom neuen Server!
+          key: ${{ secrets.STAGING_SSH_KEY }}
           source: "docker-compose.yml"
           target: "/root/devopsfallstudie"
 
@@ -96,13 +106,13 @@ jobs:
             docker compose up -d --force-recreate
 
   # ==========================================
-  # 2. DEPLOY AUF LIVE-SERVER (PRODUCTION)
+  # Job 4: DEPLOY AUF LIVE-SERVER (PRODUCTION)
   # ==========================================
   deploy-production:
     if: github.event_name == 'push'
     needs: deploy-staging
     runs-on: ubuntu-latest
-    environment: production # <--- WICHTIG: Hier springt dein Approval-Türsteher an!
+    environment: production
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -110,18 +120,18 @@ jobs:
       - name: Kopiere docker-compose.yml auf Production-Server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.PRODUCTION_SERVER_IP }} # <--- WICHTIG: Die IP vom alten, echten Server!
+          host: ${{ secrets.PRODUCTION_SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}    # <--- WICHTIG: Der Key vom alten Server!
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
           source: "docker-compose.yml"
           target: "/root/devopsfallstudie"
 
       - name: Deploy auf Production via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.PRODUCTION_SERVER_IP }} # <--- Variablen hier repariert!
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}    # <--- Variablen hier repariert!
           script: |
             cd /root/devopsfallstudie
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
