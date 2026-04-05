@@ -61,6 +61,8 @@ jobs:
           push: true
           # WICHTIG: Hier alles kleingeschrieben, sonst gibt es den "Denied" Fehler!
           tags: ghcr.io/niklasheckmann/devopsfallstudie:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # Job 3: Auf Hetzner ausrollen
   deploy-staging:
